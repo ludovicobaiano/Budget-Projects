@@ -5,6 +5,8 @@ import {
   VoceDiCostoConFornitore,
   Fattura,
   FatturaDettagliata,
+  AppUser,
+  NotificationItem,
 } from "./types";
 import { Sidebar, ActiveTab } from "./components/Sidebar";
 import { Header } from "./components/Header";
@@ -19,13 +21,26 @@ import { ModalFornitore } from "./components/ModalFornitore";
 import { ModalVoceCosto } from "./components/ModalVoceCosto";
 import { ModalFattura } from "./components/ModalFattura";
 import { FornitoreDetailDrawer } from "./components/FornitoreDetailDrawer";
+import { LoginView } from "./components/LoginView";
 import { RefreshCw } from "lucide-react";
 
 export function App() {
+  // Authentication & User State
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
+    try {
+      const saved = localStorage.getItem("budget_it_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
   const [selectedFY, setSelectedFY] = useState<string>("FY2027");
   const availableFYs = ["FY2028", "FY2027", "FY2026", "FY2025"];
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Core Data Collections
   const [fornitori, setFornitori] = useState<Fornitore[]>([]);
@@ -46,6 +61,58 @@ export function App() {
 
   const [selectedFornitoreForDrawer, setSelectedFornitoreForDrawer] = useState<Fornitore | null>(null);
 
+  // Login handler
+  const handleLogin = (user: AppUser) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem("budget_it_user", JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Logout handler
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem("budget_it_user");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Load notifications from server
+  const loadNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        setNotifications(await res.json());
+      }
+    } catch (err) {
+      console.error("Errore nel caricamento delle notifiche:", err);
+    }
+  }, []);
+
+  // Mark notifications as read for current user
+  const handleMarkReadNotification = async (notifId?: string) => {
+    if (!currentUser) return;
+    try {
+      const res = await fetch("/api/notifications/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notifId,
+          userEmail: currentUser.email,
+        }),
+      });
+      if (res.ok) {
+        setNotifications(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Fetch all database records
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -59,16 +126,29 @@ export function App() {
       if (resF.ok) setFornitori(await resF.json());
       if (resV.ok) setVociCosto(await resV.json());
       if (resFt.ok) setFatture(await resFt.json());
+
+      await loadNotifications();
     } catch (err) {
       console.error("Errore nel caricamento dei dati:", err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [loadNotifications]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (currentUser) {
+      loadData();
+    }
+  }, [currentUser, loadData]);
+
+  // Select supplier by ID (from notification popover)
+  const handleSelectFornitoreById = (id: string) => {
+    const f = fornitori.find((supp) => supp.id === id);
+    if (f) {
+      setSelectedFornitoreForDrawer(f);
+      setActiveTab("fornitori");
+    }
+  };
 
   // Overdue Invoices Count
   const overdueCount = fatture.filter((f) => f.stato_pagamento === "In Ritardo").length;
@@ -208,24 +288,45 @@ export function App() {
     window.open(`/api/export-excel?fy=${selectedFY}`, "_blank");
   };
 
+  // Render Login view if user is not authenticated
+  if (!currentUser) {
+    return <LoginView onLogin={handleLogin} />;
+  }
+
+  const isAdmin = currentUser.role === "Admin";
+
   return (
     <div id="app-container" className="min-h-screen bg-slate-50/50 flex font-sans antialiased text-slate-900 selection:bg-sky-100 selection:text-sky-900">
       {/* Persistent Navigation Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        selectedFY={selectedFY}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Sticky Header */}
         <Header
+          currentUser={currentUser}
           selectedFY={selectedFY}
           setSelectedFY={setSelectedFY}
           availableFYs={availableFYs}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           overdueCount={overdueCount}
+          notifications={notifications}
+          onMarkReadNotification={handleMarkReadNotification}
+          onLogout={handleLogout}
           onOpenAI={() => setIsAIModalOpen(true)}
           onExportExcel={handleExportExcel}
           onResetData={handleResetData}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onSelectFornitoreById={handleSelectFornitoreById}
         />
 
         {/* Viewport Content Container */}
@@ -247,14 +348,17 @@ export function App() {
                   fatture={fatture}
                   onOpenAI={() => setIsAIModalOpen(true)}
                   onNewFornitore={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFornitoreToEdit(null);
                     setIsFornitoreModalOpen(true);
                   }}
                   onNewVoceCosto={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setVoceToEdit(null);
                     setIsVoceModalOpen(true);
                   }}
                   onNewFattura={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFatturaToEdit(null);
                     setIsFatturaModalOpen(true);
                   }}
@@ -270,16 +374,19 @@ export function App() {
                   fatture={fatture}
                   selectedFY={selectedFY}
                   onNewFornitore={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFornitoreToEdit(null);
                     setIsFornitoreModalOpen(true);
                   }}
                   onEditFornitore={(f) => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFornitoreToEdit(f);
                     setIsFornitoreModalOpen(true);
                   }}
                   onDeleteFornitore={handleDeleteFornitore}
                   onSelectFornitore={(f) => setSelectedFornitoreForDrawer(f)}
                   searchQuery={searchQuery}
+                  isAdmin={isAdmin}
                 />
               )}
 
@@ -289,15 +396,18 @@ export function App() {
                   fornitori={fornitori}
                   selectedFY={selectedFY}
                   onNewVoceCosto={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setVoceToEdit(null);
                     setIsVoceModalOpen(true);
                   }}
                   onEditVoceCosto={(v) => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setVoceToEdit(v);
                     setIsVoceModalOpen(true);
                   }}
                   onDeleteVoceCosto={handleDeleteVoceCosto}
                   searchQuery={searchQuery}
+                  isAdmin={isAdmin}
                 />
               )}
 
@@ -307,15 +417,18 @@ export function App() {
                   fornitori={fornitori}
                   selectedFY={selectedFY}
                   onNewFattura={() => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFatturaToEdit(null);
                     setIsFatturaModalOpen(true);
                   }}
                   onEditFattura={(ft) => {
+                    if (!isAdmin) return alert("Azione riservata all'Amministratore.");
                     setFatturaToEdit(ft);
                     setIsFatturaModalOpen(true);
                   }}
                   onDeleteFattura={handleDeleteFattura}
                   searchQuery={searchQuery}
+                  isAdmin={isAdmin}
                 />
               )}
 
@@ -334,6 +447,7 @@ export function App() {
                   selectedFY={selectedFY}
                   onExportExcel={handleExportExcel}
                   onRefreshAll={loadData}
+                  isAdmin={isAdmin}
                 />
               )}
             </>
@@ -382,11 +496,13 @@ export function App() {
         fatture={fatture}
         selectedFY={selectedFY}
         onEditFornitore={(f) => {
+          if (!isAdmin) return alert("Azione riservata all'Amministratore.");
           setSelectedFornitoreForDrawer(null);
           setFornitoreToEdit(f);
           setIsFornitoreModalOpen(true);
         }}
         onNewVoceCostoForFornitore={(fId) => {
+          if (!isAdmin) return alert("Azione riservata all'Amministratore.");
           setSelectedFornitoreForDrawer(null);
           setVoceToEdit(null);
           setIsVoceModalOpen(true);

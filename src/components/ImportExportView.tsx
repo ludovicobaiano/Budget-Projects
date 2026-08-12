@@ -10,18 +10,22 @@ import {
   Table,
   RefreshCw,
   Sparkles,
+  Eye,
+  Lock,
 } from "lucide-react";
 
 interface ImportExportViewProps {
   selectedFY: string;
   onExportExcel: () => void;
   onRefreshAll: () => void;
+  isAdmin?: boolean;
 }
 
 export const ImportExportView: React.FC<ImportExportViewProps> = ({
   selectedFY,
   onExportExcel,
   onRefreshAll,
+  isAdmin = true,
 }) => {
   const [importType, setImportType] = useState<"voci_costo" | "fatture">("voci_costo");
   const [parsedData, setParsedData] = useState<any[]>([]);
@@ -185,6 +189,20 @@ export const ImportExportView: React.FC<ImportExportViewProps> = ({
 
   return (
     <div id="import-export-view" className="space-y-6 pb-12 animate-fade-in">
+      {!isAdmin && (
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs text-emerald-800 font-medium shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              <strong>Modalità Visualizzatore:</strong> L'esportazione dei report Excel è abilitata per tutti, mentre l'importazione massiva da Excel è riservata agli Amministratori.
+            </span>
+          </div>
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-bold text-[10px] shrink-0 border border-emerald-200">
+            Export Abilitato
+          </span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

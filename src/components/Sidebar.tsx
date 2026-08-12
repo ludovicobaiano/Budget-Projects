@@ -11,8 +11,10 @@ import {
   Sliders,
   DollarSign,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Eye
 } from "lucide-react";
+import { AppUser } from "../types";
 
 export type TabType =
   | "dashboard"
@@ -26,6 +28,8 @@ export type TabType =
 export type ActiveTab = TabType;
 
 interface SidebarProps {
+  currentUser?: AppUser;
+  onLogout?: () => void;
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   selectedFY: string;
@@ -34,6 +38,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+  currentUser,
+  onLogout,
   activeTab,
   setActiveTab,
   selectedFY,
@@ -114,22 +120,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Card */}
-        <div id="user-profile-card" className="mx-4 my-4 p-3 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-100/70 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-sm border border-sky-200">
-              MR
+        {currentUser && (
+          <div
+            id="user-profile-card"
+            className="mx-4 my-3 p-3 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex items-center justify-between hover:bg-slate-100 transition-colors group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                  currentUser.role === "Admin"
+                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                    : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                }`}
+              >
+                {currentUser.role === "Admin" ? <ShieldCheck className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </div>
+              <div className="overflow-hidden min-w-0">
+                <p className="text-xs font-bold text-slate-800 truncate">
+                  {currentUser.name}
+                </p>
+                <p className="text-[10px] text-slate-500 truncate font-medium">
+                  {currentUser.role === "Admin" ? "Amministratore IT" : "Visualizzatore"}
+                </p>
+              </div>
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-slate-800 truncate">
-                Marco Rossi
-              </p>
-              <p className="text-[11px] text-slate-500 truncate">
-                Responsabile SI
-              </p>
-            </div>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Disconnetti / Cambia Utente"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+        )}
 
         {/* Navigation Section */}
         <div className="px-3 py-2">

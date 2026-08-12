@@ -23,6 +23,8 @@ import {
   ShoppingBag,
   User,
   Phone,
+  Eye,
+  ShieldCheck,
 } from "lucide-react";
 
 interface FornitoriViewProps {
@@ -35,6 +37,7 @@ interface FornitoriViewProps {
   onDeleteFornitore: (id: string) => void;
   onSelectFornitore: (f: Fornitore) => void;
   searchQuery: string;
+  isAdmin?: boolean;
 }
 
 export const FornitoriView: React.FC<FornitoriViewProps> = ({
@@ -47,6 +50,7 @@ export const FornitoriView: React.FC<FornitoriViewProps> = ({
   onDeleteFornitore,
   onSelectFornitore,
   searchQuery,
+  isAdmin = true,
 }) => {
   const [filterTipologia, setFilterTipologia] = useState<string>("Tutti");
   const [filterStato, setFilterStato] = useState<string>("Attivo");
@@ -72,6 +76,20 @@ export const FornitoriView: React.FC<FornitoriViewProps> = ({
   return (
     <div id="fornitori-view" className="space-y-6 pb-12 animate-fade-in">
       {/* Header Banner */}
+      {!isAdmin && (
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs text-emerald-800 font-medium shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              <strong>Modalità Visualizzatore (Sola Lettura):</strong> Sei connesso come solo visualizzatore. L'inserimento, la modifica e l'eliminazione dei fornitori sono riservati all'Amministratore.
+            </span>
+          </div>
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-bold text-[10px] shrink-0 border border-emerald-200">
+            Sola Lettura
+          </span>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -83,14 +101,21 @@ export const FornitoriView: React.FC<FornitoriViewProps> = ({
           </p>
         </div>
 
-        <button
-          id="btn-add-fornitore-top"
-          onClick={onNewFornitore}
-          className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-xs shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nuovo Fornitore</span>
-        </button>
+        {isAdmin ? (
+          <button
+            id="btn-add-fornitore-top"
+            onClick={onNewFornitore}
+            className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-xs shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nuovo Fornitore</span>
+          </button>
+        ) : (
+          <div className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-semibold flex items-center gap-1.5 shrink-0 border border-slate-200 select-none">
+            <Eye className="w-3.5 h-3.5" />
+            <span>Aggiungi (Solo Admin)</span>
+          </div>
+        )}
       </div>
 
       {/* Filter Controls Bar */}
@@ -282,25 +307,29 @@ export const FornitoriView: React.FC<FornitoriViewProps> = ({
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => onSelectFornitore(f)}
-                            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-sky-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-sky-600 transition-colors cursor-pointer"
                             title="Visualizza scheda dettaglio"
                           >
                             <ChevronRight className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => onEditFornitore(f)}
-                            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-sky-600 transition-colors"
-                            title="Modifica fornitore"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => onDeleteFornitore(f.id)}
-                            className="p-1.5 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-colors"
-                            title="Elimina fornitore"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={() => onEditFornitore(f)}
+                                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-sky-600 transition-colors cursor-pointer"
+                                title="Modifica fornitore"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => onDeleteFornitore(f.id)}
+                                className="p-1.5 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                title="Elimina fornitore"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -435,18 +464,24 @@ export const FornitoriView: React.FC<FornitoriViewProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onEditFornitore(f)}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] rounded-lg transition-colors"
-                      >
-                        Modifica
-                      </button>
-                      <button
-                        onClick={() => onDeleteFornitore(f.id)}
-                        className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {isAdmin ? (
+                        <>
+                          <button
+                            onClick={() => onEditFornitore(f)}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] rounded-lg transition-colors cursor-pointer"
+                          >
+                            Modifica
+                          </button>
+                          <button
+                            onClick={() => onDeleteFornitore(f.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">Sola Lettura</span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,33 +1,54 @@
-import React from "react";
-import { Search, Bell, Sparkles, Download, Calendar, RefreshCw, Menu } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Bell, Sparkles, Download, Calendar, RefreshCw, Menu, UserCheck, ShieldCheck, Eye, LogOut } from "lucide-react";
+import { AppUser, NotificationItem } from "../types";
+import { NotificationsPopover } from "./NotificationsPopover";
 
 interface HeaderProps {
+  currentUser: AppUser;
   selectedFY: string;
   setSelectedFY: (fy: string) => void;
   availableFYs: string[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   overdueCount: number;
+  notifications: NotificationItem[];
+  onMarkReadNotification: (notifId?: string) => void;
+  onLogout: () => void;
   onOpenAI: () => void;
   onExportExcel: () => void;
   onResetData: () => void;
   title?: string;
   onToggleMobileMenu?: () => void;
+  onSelectFornitoreById?: (id: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  currentUser,
   selectedFY,
   setSelectedFY,
   availableFYs,
   searchQuery,
   setSearchQuery,
   overdueCount,
+  notifications,
+  onMarkReadNotification,
+  onLogout,
   onOpenAI,
   onExportExcel,
   onResetData,
   title = "Budget & Expense IT",
   onToggleMobileMenu,
+  onSelectFornitoreById,
 }) => {
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Unread notifications for current user
+  const unreadNotifsCount = notifications.filter(
+    (n) => !n.readBy.includes(currentUser.email)
+  ).length;
+
+  const totalBadgeCount = unreadNotifsCount + overdueCount;
+
   return (
     <header id="app-header" className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-6 py-2.5 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sticky top-0 z-20 gap-2 sm:gap-4 shadow-2xs">
       {/* Top Row on Mobile / Left Section on Desktop */}
@@ -89,9 +110,39 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Tools & Fiscal Year Selector */}
+      {/* Right Tools, User Profile & Fiscal Year Selector */}
       <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
         <div className="flex items-center gap-1.5">
+          {/* User Profile Badge */}
+          <div className="flex items-center gap-2 bg-slate-100/90 border border-slate-200/80 rounded-xl px-2.5 py-1 text-xs text-slate-700 font-semibold shadow-2xs">
+            <div
+              className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+                currentUser.role === "Admin"
+                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                  : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+              }`}
+            >
+              {currentUser.role === "Admin" ? <ShieldCheck className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </div>
+
+            <div className="hidden lg:block text-left min-w-0">
+              <p className="font-bold text-slate-800 text-[11px] truncate max-w-[120px]">
+                {currentUser.name}
+              </p>
+              <p className="text-[9px] text-slate-400 leading-none truncate max-w-[120px]">
+                {currentUser.role === "Admin" ? "Amministratore" : "Visualizzatore"}
+              </p>
+            </div>
+
+            <button
+              onClick={onLogout}
+              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-400 hover:text-rose-600 transition-colors ml-1"
+              title="Cambia Utente / Disconnetti"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* Reset Data Button for easy demo testing */}
           <button
             id="btn-reset-data"
@@ -107,16 +158,29 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative shrink-0">
             <button
               id="btn-notifications"
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="p-2 rounded-xl border border-slate-200/70 hover:bg-slate-50 text-slate-600 transition-colors relative"
-              title={overdueCount > 0 ? `${overdueCount} fatture in ritardo / da pagare` : "Nessuna notifica urgente"}
+              title="Centro Notifiche"
             >
               <Bell className="w-4 h-4" />
-              {overdueCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-xs">
-                  {overdueCount}
+              {totalBadgeCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-xs">
+                  {totalBadgeCount}
                 </span>
               )}
             </button>
+
+            {/* Notifications Popover */}
+            {isNotifOpen && (
+              <NotificationsPopover
+                currentUser={currentUser}
+                notifications={notifications}
+                overdueCount={overdueCount}
+                onMarkRead={onMarkReadNotification}
+                onClose={() => setIsNotifOpen(false)}
+                onSelectFornitoreById={onSelectFornitoreById}
+              />
+            )}
           </div>
 
           {/* Persistent Fiscal Year Dropdown */}
@@ -167,3 +231,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

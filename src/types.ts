@@ -11,6 +11,53 @@ export type StatoVoceCosto = 'Attiva' | 'Chiusa' | 'Sospesa';
 
 export type StatoPagamento = 'Da Pagare' | 'Pagata' | 'In Ritardo';
 
+export type UserRole = 'Admin' | 'Viewer';
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatarUrl?: string;
+  department: string;
+}
+
+export const PREDEFINED_USERS: AppUser[] = [
+  {
+    id: 'u-admin',
+    name: 'Alessandro Conti',
+    email: 'admin@company.it',
+    role: 'Admin',
+    department: 'Direzione IT (Amministratore)',
+  },
+  {
+    id: 'u-viewer1',
+    name: 'Mario Rossi',
+    email: 'viewer1@company.it',
+    role: 'Viewer',
+    department: 'Controllo di Gestione (Visualizzatore 1)',
+  },
+  {
+    id: 'u-viewer2',
+    name: 'Giulia Bianchi',
+    email: 'viewer2@company.it',
+    role: 'Viewer',
+    department: 'Audit & Compliance (Visualizzatore 2)',
+  },
+];
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  fornitoreId?: string;
+  fornitoreNome: string;
+  fornitoreTipologia?: TipologiaFornitore;
+  createdByName: string;
+  readBy: string[]; // List of user emails who marked as read
+}
+
 export interface Fornitore {
   id: string;
   nome: string;

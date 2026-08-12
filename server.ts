@@ -8,6 +8,7 @@ import {
   Fornitore,
   VoceDiCosto,
   Fattura,
+  NotificationItem,
   calculateFiscalYear,
   getCurrentFiscalYear,
   calculateAnnualizedPreventivo,
@@ -27,6 +28,7 @@ interface DataStore {
   fornitori: Fornitore[];
   vociCosto: VoceDiCosto[];
   fatture: Fattura[];
+  notifications: NotificationItem[];
 }
 
 // Initial Seed Data
@@ -588,7 +590,32 @@ function getSeedData(): DataStore {
     },
   ];
 
-  return { fornitori, vociCosto, fatture };
+  const notifications: NotificationItem[] = [
+    {
+      id: "notif-seed-1",
+      title: "Nuovo Fornitore Inserito",
+      message: "L'Amministratore Alessandro Conti ha aggiunto il fornitore 'Aruba Datacenter' (Servizi).",
+      timestamp: new Date(Date.now() - 3600000 * 4).toISOString(), // 4 hours ago
+      fornitoreId: "f-8",
+      fornitoreNome: "Aruba Datacenter",
+      fornitoreTipologia: "Servizi",
+      createdByName: "Alessandro Conti (Amministratore IT)",
+      readBy: [],
+    },
+    {
+      id: "notif-seed-2",
+      title: "Nuovo Fornitore Inserito",
+      message: "L'Amministratore Alessandro Conti ha aggiunto il fornitore 'Amazon Business IT Store' (Acquisto Terze Parti).",
+      timestamp: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+      fornitoreId: "f-7",
+      fornitoreNome: "Amazon Business IT Store",
+      fornitoreTipologia: "Acquisto Terze Parti",
+      createdByName: "Alessandro Conti (Amministratore IT)",
+      readBy: [],
+    },
+  ];
+
+  return { fornitori, vociCosto, fatture, notifications };
 }
 
 // Data Store Helpers
@@ -599,7 +626,11 @@ function loadData(): DataStore {
     }
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, "utf-8");
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      if (!parsed.notifications) {
+        parsed.notifications = [];
+      }
+      return parsed;
     }
   } catch (err) {
     console.error("Error reading db.json, using seed data:", err);
@@ -651,8 +682,55 @@ async function startServer() {
       data_ultima_modifica: today,
     };
     store.fornitori.push(newFornitore);
+
+    // Create Notification for Viewers
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      title: "Nuovo Fornitore Inserito",
+      message: `L'Amministratore ha aggiunto il nuovo fornitore "${nome}" (${tipologia}).`,
+      timestamp: new Date().toISOString(),
+      fornitoreId: newFornitore.id,
+      fornitoreNome: newFornitore.nome,
+      fornitoreTipologia: newFornitore.tipologia,
+      createdByName: req.body.creator_name || "Alessandro Conti (Amministratore IT)",
+      readBy: [],
+    };
+    if (!store.notifications) store.notifications = [];
+    store.notifications.unshift(newNotif);
+
     saveData(store);
     res.status(201).json(newFornitore);
+  });
+
+  // NOTIFICATIONS ENDPOINTS
+  app.get("/api/notifications", (req, res) => {
+    res.json(store.notifications || []);
+  });
+
+  app.post("/api/notifications/mark-read", (req, res) => {
+    const { userEmail, notifId } = req.body;
+    if (!userEmail) {
+      return res.status(400).json({ error: "userEmail è obbligatorio." });
+    }
+
+    if (!store.notifications) store.notifications = [];
+
+    if (notifId) {
+      const target = store.notifications.find((n) => n.id === notifId);
+      if (target && !target.readBy.includes(userEmail)) {
+        target.readBy.push(userEmail);
+      }
+    } else {
+      // Mark all as read for user
+      store.notifications.forEach((n) => {
+        if (!n.readBy.includes(userEmail)) {
+          n.readBy.push(userEmail);
+        }
+      });
+    }
+
+    saveData(store);
+    res.json({ success: true, notifications: store.notifications });
   });
 
   app.put("/api/fornitori/:id", (req, res) => {
