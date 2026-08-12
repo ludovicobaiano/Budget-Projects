@@ -1,0 +1,6 @@
+{
+  "name": "Gestione Budget IT",
+  "description": "Applicazione centralizzata per il Responsabile SI per gestire budget IT, fornitori, costi e fatture per anno fiscale (FY).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
