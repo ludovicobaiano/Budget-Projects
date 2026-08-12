@@ -351,14 +351,14 @@ export const VociCostoView: React.FC<VociCostoViewProps> = ({
                           {isAdmin ? (
                             <>
                               <button
-                                onClick={() => onEditVoce(v)}
+                                onClick={() => onEditVoceCosto(v)}
                                 className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-sky-600 transition-colors cursor-pointer"
                                 title="Modifica voce"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => onDeleteVoce(v.id)}
+                                onClick={() => onDeleteVoceCosto(v.id)}
                                 className="p-1.5 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                                 title="Elimina voce"
                               >
@@ -456,13 +456,13 @@ export const VociCostoView: React.FC<VociCostoViewProps> = ({
                       {isAdmin ? (
                         <>
                           <button
-                            onClick={() => onEditVoce(v)}
+                            onClick={() => onEditVoceCosto(v)}
                             className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] rounded-lg transition-colors cursor-pointer"
                           >
                             Modifica
                           </button>
                           <button
-                            onClick={() => onDeleteVoce(v.id)}
+                            onClick={() => onDeleteVoceCosto(v.id)}
                             className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

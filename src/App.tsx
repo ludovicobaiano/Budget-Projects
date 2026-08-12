@@ -296,7 +296,7 @@ export function App() {
   const isAdmin = currentUser.role === "Admin";
 
   return (
-    <div id="app-container" className="min-h-screen bg-slate-50/50 flex font-sans antialiased text-slate-900 selection:bg-sky-100 selection:text-sky-900">
+    <div id="app-container" className="min-h-screen bg-[#f3f5f8] flex font-sans antialiased text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
       {/* Persistent Navigation Sidebar */}
       <Sidebar
         currentUser={currentUser}

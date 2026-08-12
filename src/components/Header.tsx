@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Bell, Sparkles, Download, Calendar, RefreshCw, Menu, UserCheck, ShieldCheck, Eye, LogOut } from "lucide-react";
+import { Search, Bell, Sparkles, Download, Calendar, RefreshCw, Menu, LogOut, ChevronDown } from "lucide-react";
 import { AppUser, NotificationItem } from "../types";
 import { NotificationsPopover } from "./NotificationsPopover";
 
@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAI,
   onExportExcel,
   onResetData,
-  title = "Budget & Expense IT",
+  title = "Dashboard",
   onToggleMobileMenu,
   onSelectFornitoreById,
 }) => {
@@ -50,38 +50,39 @@ export const Header: React.FC<HeaderProps> = ({
   const totalBadgeCount = unreadNotifsCount + overdueCount;
 
   return (
-    <header id="app-header" className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-6 py-2.5 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sticky top-0 z-20 gap-2 sm:gap-4 shadow-2xs">
-      {/* Top Row on Mobile / Left Section on Desktop */}
-      <div className="flex items-center justify-between sm:justify-start gap-3 flex-1 min-w-0">
-        {/* Mobile Hamburger Button */}
+    <header id="app-header" className="px-4 sm:px-6 pt-4 pb-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sticky top-0 z-20 backdrop-blur-md bg-[#f3f5f8]/90">
+      {/* Title & Search Bar */}
+      <div className="flex items-center justify-between sm:justify-start gap-4 flex-1 min-w-0">
+        {/* Mobile Menu Toggle Button */}
         <button
           id="btn-mobile-menu"
           onClick={onToggleMobileMenu}
-          className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0"
-          title="Apri menu di navigazione"
+          className="lg:hidden p-2 rounded-2xl bg-white border border-slate-200 text-slate-700 transition-colors shrink-0 shadow-2xs"
+          title="Apri menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <h2 className="text-sm sm:text-lg font-bold text-slate-800 tracking-tight truncate">
+        {/* Section Title */}
+        <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight shrink-0">
           {title}
         </h2>
 
-        {/* Global Search Bar - Full Width on Mobile, Max-xl on Desktop */}
-        <div className="relative flex-1 hidden sm:block max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        {/* Centered Pill Search Bar (Matching Search... in Screenshot) */}
+        <div className="relative flex-1 hidden md:block max-w-md mx-auto">
+          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             id="global-search-input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cerca fornitore, voce di costo, n° fattura..."
-            className="w-full pl-10 pr-4 py-1.5 text-xs bg-slate-100/80 border border-slate-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-800 placeholder-slate-400"
+            placeholder="Search...."
+            className="w-full pl-10 pr-8 py-2 text-xs bg-white border border-slate-200/90 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 placeholder-slate-400 shadow-2xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
             >
               ×
             </button>
@@ -89,106 +90,43 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Search Input on Mobile (Below Header Title) */}
-      <div className="relative w-full sm:hidden">
+      {/* Mobile Search Input */}
+      <div className="relative w-full md:hidden">
         <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <input
           id="global-search-input-mobile"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Cerca fornitore, voce di costo..."
-          className="w-full pl-10 pr-8 py-2 text-xs bg-slate-100/90 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 placeholder-slate-400"
+          placeholder="Search...."
+          className="w-full pl-10 pr-8 py-2 text-xs bg-white border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-800 placeholder-slate-400 shadow-2xs"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
           >
             ×
           </button>
         )}
       </div>
 
-      {/* Right Tools, User Profile & Fiscal Year Selector */}
-      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-        <div className="flex items-center gap-1.5">
-          {/* User Profile Badge */}
-          <div className="flex items-center gap-2 bg-slate-100/90 border border-slate-200/80 rounded-xl px-2.5 py-1 text-xs text-slate-700 font-semibold shadow-2xs">
-            <div
-              className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold ${
-                currentUser.role === "Admin"
-                  ? "bg-amber-100 text-amber-800 border border-amber-200"
-                  : "bg-emerald-100 text-emerald-800 border border-emerald-200"
-              }`}
-            >
-              {currentUser.role === "Admin" ? <ShieldCheck className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            </div>
-
-            <div className="hidden lg:block text-left min-w-0">
-              <p className="font-bold text-slate-800 text-[11px] truncate max-w-[120px]">
-                {currentUser.name}
-              </p>
-              <p className="text-[9px] text-slate-400 leading-none truncate max-w-[120px]">
-                {currentUser.role === "Admin" ? "Amministratore" : "Visualizzatore"}
-              </p>
-            </div>
-
-            <button
-              onClick={onLogout}
-              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-400 hover:text-rose-600 transition-colors ml-1"
-              title="Cambia Utente / Disconnetti"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Reset Data Button for easy demo testing */}
+      {/* Right User Actions, Notifications & Profile */}
+      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+        <div className="flex items-center gap-2">
+          {/* AI Advisor Pill */}
           <button
-            id="btn-reset-data"
-            onClick={onResetData}
-            title="Ripristina dati iniziali"
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors text-xs flex items-center gap-1 shrink-0"
+            id="btn-ask-ai"
+            onClick={onOpenAI}
+            className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden xl:inline text-[11px]">Reset Dati</span>
+            <Sparkles className="w-3.5 h-3.5 text-emerald-100 shrink-0" />
+            <span>AI Assistant</span>
           </button>
 
-          {/* Notifications Bell */}
-          <div className="relative shrink-0">
-            <button
-              id="btn-notifications"
-              onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="p-2 rounded-xl border border-slate-200/70 hover:bg-slate-50 text-slate-600 transition-colors relative"
-              title="Centro Notifiche"
-            >
-              <Bell className="w-4 h-4" />
-              {totalBadgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-xs">
-                  {totalBadgeCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Popover */}
-            {isNotifOpen && (
-              <NotificationsPopover
-                currentUser={currentUser}
-                notifications={notifications}
-                overdueCount={overdueCount}
-                onMarkRead={onMarkReadNotification}
-                onClose={() => setIsNotifOpen(false)}
-                onSelectFornitoreById={onSelectFornitoreById}
-              />
-            )}
-          </div>
-
-          {/* Persistent Fiscal Year Dropdown */}
-          <div className="flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 font-semibold shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-            <span className="text-[11px] text-slate-400 font-medium hidden md:inline">
-              FY:
-            </span>
+          {/* Fiscal Year Pill */}
+          <div className="flex items-center gap-1 bg-white border border-slate-200/90 rounded-full px-3 py-1.5 text-xs text-slate-700 font-bold shadow-2xs">
+            <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <select
               id="fy-selector-dropdown"
               value={selectedFY}
@@ -202,33 +140,62 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
             </select>
           </div>
-        </div>
 
-        <div className="flex items-center gap-1.5">
-          {/* Ask AI Button */}
-          <button
-            id="btn-ask-ai"
-            onClick={onOpenAI}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold shadow-xs hover:shadow-md hover:opacity-95 transition-all shrink-0"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-sky-100 animate-spin-slow shrink-0" />
-            <span className="hidden sm:inline">Chiedi ad AI</span>
-            <span className="sm:hidden">AI</span>
-          </button>
+          {/* Notifications Bell Button */}
+          <div className="relative shrink-0">
+            <button
+              id="btn-notifications"
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="w-9 h-9 rounded-full bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center relative shadow-2xs cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {totalBadgeCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse shadow-xs">
+                  {totalBadgeCount}
+                </span>
+              )}
+            </button>
 
-          {/* Export Excel Report Button */}
-          <button
-            id="btn-export-report"
-            onClick={onExportExcel}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:bg-slate-50 hover:border-slate-300 transition-all shrink-0"
-            title="Esporta Report Excel"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            <span className="hidden md:inline">Esporta</span>
-          </button>
+            {isNotifOpen && (
+              <NotificationsPopover
+                currentUser={currentUser}
+                notifications={notifications}
+                overdueCount={overdueCount}
+                onMarkRead={onMarkReadNotification}
+                onClose={() => setIsNotifOpen(false)}
+                onSelectFornitoreById={onSelectFornitoreById}
+              />
+            )}
+          </div>
+
+          {/* User Profile Block (Matching "Alex Ragnarsson - Admin Store" in Screenshot) */}
+          <div className="flex items-center gap-2.5 bg-white border border-slate-200/90 rounded-full pl-1.5 pr-3 py-1 shadow-2xs">
+            <div className="w-7 h-7 rounded-full bg-amber-200/80 border border-amber-300 flex items-center justify-center text-amber-900 font-black text-xs shrink-0 overflow-hidden">
+              {currentUser.name.charAt(0)}
+            </div>
+
+            <div className="text-left min-w-0 hidden sm:block">
+              <p className="font-extrabold text-slate-800 text-xs leading-none truncate max-w-[130px]">
+                {currentUser.name}
+              </p>
+              <p className="text-[10px] text-slate-400 font-semibold leading-tight truncate max-w-[130px]">
+                {currentUser.role === "Admin" ? "Admin Store" : "Viewer Store"}
+              </p>
+            </div>
+
+            <button
+              onClick={onLogout}
+              className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-rose-600 transition-colors ml-0.5 cursor-pointer"
+              title="Disconnetti"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </header>
   );
 };
+
 
